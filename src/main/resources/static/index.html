@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Щоденник Харчування</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/de.js"></script>
+
+    <style>
+        :root {
+            --text-color: #333333;
+            --container-bg: rgba(255, 255, 255, 0.85);
+            --table-border: rgba(0, 0, 0, 0.1);
+            --table-header: #4CAF50;
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --card-bg: rgba(255, 255, 255, 0.6);
+            --danger: #ff4d4d;
+        }
+
+        [data-theme="dark"] {
+            --text-color: #e0e0e0;
+            --container-bg: rgba(30, 30, 30, 0.85);
+            --table-border: rgba(255, 255, 255, 0.1);
+            --table-header: #2e7d32;
+            --input-bg: rgba(40, 40, 40, 0.9);
+            --card-bg: rgba(0, 0, 0, 0.4);
+            --danger: #ff6b6b;
+        }
+
+        /* --- ПРИБИРАЄМО СКРОЛБАР --- */
+        html, body {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        /* --- ЖИВІ ШПАЛЕРИ (ПЛАВНИЙ ПЕРЕХІД) --- */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bg-layer {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; background-size: 400% 400%;
+            animation: gradientBG 20s ease infinite;
+            transition: opacity 1s ease-in-out; /* Дуже плавна зміна теми */
+        }
+
+        /* 5 світлих кольорів */
+        .bg-light {
+            background: linear-gradient(-45deg, #ffbba6, #ffc3a0, #ffafbd, #c9ffbf, #e2ebf0);
+            opacity: 1;
+        }
+        /* 5 темних кольорів */
+        .bg-dark {
+            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #141e30, #243b55);
+            opacity: 0;
+        }
+
+        [data-theme="dark"] .bg-light { opacity: 0; }
+        [data-theme="dark"] .bg-dark { opacity: 1; }
+
+        *, *::before, *::after {
+            transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+            box-sizing: border-box;
+        }
+
+        body {
+            color: var(--text-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px; margin: 0; min-height: 100vh;
+        }
+
+        .top-bar { max-width: 1000px; margin: 0 auto 15px auto; display: flex; justify-content: space-between; align-items: center; }
+        .controls-left { display: flex; gap: 15px; }
+
+        .glass-btn, .glass-input {
+            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--table-border);
+            background-color: var(--container-bg); color: var(--text-color);
+            font-size: 14px; cursor: pointer; backdrop-filter: blur(5px);
+        }
+        .glass-btn:hover { background-color: var(--table-header); color: white; border-color: var(--table-header); }
+        .glass-input { cursor: text; text-align: center; font-weight: bold; width: 130px; }
+
+        .container {
+            max-width: 1000px; margin: 0 auto; background-color: var(--container-bg); padding: 25px;
+            border-radius: 15px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1, h2, h3 { text-align: center; margin-top: 0; }
+
+        .summary-board { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 25px; }
+        .summary-card {
+            flex: 1; background-color: var(--card-bg); padding: 15px; border-radius: 10px;
+            text-align: center; border: 1px solid var(--table-border);
+        }
+        .summary-card h3 { margin: 0 0 10px 0; font-size: 16px; opacity: 0.8; }
+        .summary-card .value { font-size: 24px; font-weight: bold; color: var(--table-header); }
+
+        .target { font-size: 12px; opacity: 0.8; margin-top: 8px; display: flex; justify-content: center; align-items: center; gap: 5px;}
+        .edit-goal-btn { background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.6; padding: 0;}
+        .edit-goal-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        .progress-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+        [data-theme="dark"] .progress-bar { background: rgba(255,255,255,0.1); }
+        .progress-fill { height: 100%; background: var(--table-header); width: 0%; transition: width 0.5s ease, background-color 0.5s ease; }
+
+        .add-diary-form {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 15px;
+            border: 1px solid var(--table-border); border-radius: 8px; background-color: var(--card-bg); align-items: center;
+        }
+        .add-diary-form select, .add-diary-form input {
+            padding: 10px; border: 1px solid var(--table-border);
+            border-radius: 8px; background-color: var(--input-bg); color: var(--text-color);
+        }
+
+        /* КРАСИВА КНОПКА ДОДАВАННЯ ПРОДУКТУ */
+        .ing-group { display: flex; flex: 2; gap: 5px; }
+        .ing-group select { flex: 1; }
+        .icon-btn {
+            padding: 0 15px; background-color: var(--card-bg); color: var(--text-color);
+            border: 1px solid var(--table-border); border-radius: 8px; cursor: pointer; font-size: 16px;
+        }
+        .icon-btn:hover { background-color: var(--table-header); color: white; border-color: var(--table-header); }
+
+        .add-btn {
+            padding: 10px 15px; background-color: var(--table-header); color: white;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; flex: 0.5;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid var(--table-border); padding: 12px; text-align: left; }
+        th { background-color: var(--table-header); color: white; border-color: var(--table-header); }
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+        .flatpickr-calendar { background: var(--container-bg) !important; backdrop-filter: blur(12px) !important; border: 1px solid var(--table-border) !important; }
+        .flatpickr-day, .flatpickr-current-month, .flatpickr-weekday, .flatpickr-month { color: var(--text-color) !important; fill: var(--text-color) !important; }
+        .flatpickr-day.selected { background: var(--table-header) !important; border-color: var(--table-header) !important; color: white !important;}
+
+        /* --- АНІМАЦІЯ МОДАЛЬНОГО ВІКНА --- */
+        .modal-overlay {
+            visibility: hidden; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+
+        .modal-content {
+            background-color: var(--container-bg); padding: 25px; border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px;
+            /* Ефект "пружини" (вистрибування) */
+            transform: scale(0.8) translateY(-30px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color); }
+        .close-btn:hover { color: var(--danger); transform: scale(1.1); }
+
+        .modal-content input {
+            padding: 12px; border: 1px solid var(--table-border); border-radius: 8px;
+            background-color: var(--input-bg); color: var(--text-color); font-size: 14px;
+        }
+        .save-db-btn {
+            padding: 12px; background-color: var(--table-header); color: white; border: none;
+            border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-layer bg-light"></div>
+<div class="bg-layer bg-dark"></div>
+
+<div class="top-bar">
+    <div class="controls-left">
+        <select id="langSwitch" class="glass-btn" onchange="changeLanguage()">
+            <option value="uk">🇺🇦 Укр</option>
+            <option value="en">🇬🇧 Eng</option>
+            <option value="de">🇩🇪 Deu</option>
+        </select>
+        <button id="themeToggle" class="glass-btn"><span id="themeIcon">🌙</span> <span data-i18n="theme">Темна тема</span></button>
+    </div>
+    <div>
+        <input type="text" id="calendar" class="glass-input" placeholder="Оберіть дату">
+    </div>
+</div>
+
+<div class="container">
+    <h1 data-i18n="title">Щоденник Харчування</h1>
+
+    <div class="summary-board">
+        <div class="summary-card">
+            <h3 data-i18n="cal">Калорії</h3>
+            <div class="value" id="totCal">0</div>
+            <div class="progress-bar"><div class="progress-fill" id="calProgress"></div></div>
+            <div class="target">
+                <span data-i18n="goal">Ціль</span>: <span id="goalValue">2400</span> <span data-i18n="kcalText">ккал</span>
+                <button class="edit-goal-btn" onclick="editGoal()" title="Змінити ціль">✏️</button>
+            </div>
+        </div>
+        <div class="summary-card">
+            <h3 data-i18n="prot">Білки</h3>
+            <div class="value" id="totProt">0</div>
+            <div class="target">г</div>
+        </div>
+        <div class="summary-card">
+            <h3 data-i18n="fat">Жири</h3>
+            <div class="value" id="totFat">0</div>
+            <div class="target">г</div>
+        </div>
+        <div class="summary-card">
+            <h3 data-i18n="carbs">Вуглеводи</h3>
+            <div class="value" id="totCarbs">0</div>
+            <div class="target">г</div>
+        </div>
+    </div>
+
+    <div class="add-diary-form">
+        <select id="mealTypeSelect" style="flex: 0.8;">
+            <option value="Сніданок" data-i18n="breakfast">Сніданок</option>
+            <option value="Обід" data-i18n="lunch">Обід</option>
+            <option value="Вечеря" data-i18n="dinner">Вечеря</option>
+            <option value="Перекус" data-i18n="snack">Перекус</option>
+        </select>
+
+        <div class="ing-group">
+            <select id="ingredientSelect">
+                <option value="" disabled selected data-i18n="selectFood">-- Оберіть продукт з бази --</option>
+            </select>
+            <button class="icon-btn" onclick="openModal()" title="Додати новий продукт в базу">➕</button>
+        </div>
+
+        <input type="number" id="gramsInput" data-i18n-ph="gramsPh" placeholder="Грами" style="flex: 0.5;">
+        <button class="add-btn" onclick="addToDiary()" data-i18n="addBtn">✔️ Записати</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th data-i18n="time">Прийом їжі</th>
+            <th data-i18n="name">Продукт</th>
+            <th data-i18n="weight">Вага (г)</th>
+            <th data-i18n="cal">Ккал</th>
+            <th data-i18n="prot">Б</th>
+            <th data-i18n="fat">Ж</th>
+            <th data-i18n="carbs">В</th>
+        </tr>
+        </thead>
+        <tbody id="diaryBody">
+        </tbody>
+    </table>
+</div>
+
+<div class="modal-overlay" id="addIngModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 data-i18n="modalTitle">Створити продукт</h2>
+            <button class="close-btn" onclick="closeModal()">✖</button>
+        </div>
+        <input type="text" id="newName" data-i18n-ph="phName" placeholder="Назва (напр. Банан)">
+        <input type="number" id="newCal" data-i18n-ph="phCal" placeholder="Ккал (на 100г)">
+        <input type="number" id="newProt" data-i18n-ph="phProt" placeholder="Білки">
+        <input type="number" id="newFat" data-i18n-ph="phFat" placeholder="Жири">
+        <input type="number" id="newCarb" data-i18n-ph="phCarb" placeholder="Вуглеводи">
+        <button class="save-db-btn" onclick="saveNewIngredient()" data-i18n="saveToDB">💾 Зберегти в базу</button>
+    </div>
+</div>
+
+<script>
+    // --- ПЕРЕКЛАДИ ТА ЛОКАЛІЗАЦІЯ ---
+    const translations = {
+        uk: { title: "Щоденник Харчування", cal: "Калорії", prot: "Білки", fat: "Жири", carbs: "Вуглеводи", breakfast: "Сніданок", lunch: "Обід", dinner: "Вечеря", snack: "Перекус", selectFood: "-- Оберіть продукт --", addBtn: "✔️ Записати", time: "Прийом їжі", name: "Продукт", weight: "Вага (г)", theme: "Темна тема", themeL: "Світла тема", goal: "Ціль", kcalText: "ккал", promptGoal: "Введіть вашу нову ціль (ккал):", createNew: "Створити", gramsPh: "Грами", modalTitle: "Новий продукт", saveToDB: "💾 Зберегти в базу", phName: "Назва (напр. Банан)", phCal: "Ккал (на 100г)", phProt: "Білки (г)", phFat: "Жири (г)", phCarb: "Вуглеводи (г)" },
+        en: { title: "Meal Diary", cal: "Calories", prot: "Protein", fat: "Fat", carbs: "Carbs", breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack", selectFood: "-- Select product --", addBtn: "✔️ Log Meal", time: "Meal Type", name: "Product", weight: "Weight (g)", theme: "Dark Theme", themeL: "Light Theme", goal: "Goal", kcalText: "kcal", promptGoal: "Enter your new calorie goal:", createNew: "Create", gramsPh: "Grams", modalTitle: "New Product", saveToDB: "💾 Save to DB", phName: "Name (e.g. Banana)", phCal: "Kcal (per 100g)", phProt: "Protein (g)", phFat: "Fat (g)", phCarb: "Carbs (g)" },
+        de: { title: "Ernährungstagebuch", cal: "Kalorien", prot: "Eiweiß", fat: "Fett", carbs: "Kohlenhydrate", breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen", snack: "Snack", selectFood: "-- Produkt wählen --", addBtn: "✔️ Eintragen", time: "Mahlzeit", name: "Produkt", weight: "Gewicht (g)", theme: "Dunkles Design", themeL: "Helles Design", goal: "Ziel", kcalText: "kcal", promptGoal: "Neues Kalorienziel eingeben:", createNew: "Erstellen", gramsPh: "Gramm", modalTitle: "Neues Produkt", saveToDB: "💾 Speichern", phName: "Name (z.B. Banane)", phCal: "Kcal (pro 100g)", phProt: "Eiweiß (g)", phFat: "Fett (g)", phCarb: "Kohlenhydrate (g)" }
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'uk';
+    document.getElementById('langSwitch').value = currentLang;
+
+    let calendarInst = flatpickr("#calendar", {
+        defaultDate: "today", dateFormat: "Y-m-d",
+        locale: currentLang === 'en' ? 'default' : currentLang,
+        onChange: function(selectedDates, dateStr) { loadLogsForDate(dateStr); }
+    });
+
+    function changeLanguage() {
+        currentLang = document.getElementById('langSwitch').value;
+        localStorage.setItem('lang', currentLang);
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            el.innerText = translations[currentLang][el.getAttribute('data-i18n')];
+        });
+        document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+            el.placeholder = translations[currentLang][el.getAttribute('data-i18n-ph')];
+        });
+        updateThemeText();
+        calendarInst.set("locale", currentLang === 'en' ? 'default' : currentLang);
+    }
+
+    // --- ТЕМА ---
+    const themeBtn = document.getElementById('themeToggle');
+    if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+
+    function updateThemeText() {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+        document.querySelector('[data-i18n^="theme"]').innerText = isDark ? translations[currentLang].themeL : translations[currentLang].theme;
+    }
+
+    themeBtn.addEventListener('click', () => {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        isDark ? document.body.removeAttribute('data-theme') : document.body.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+        updateThemeText();
+    });
+
+    // --- ЦІЛЬ КАЛОРІЙ ---
+    let userGoal = localStorage.getItem('calorieGoal') || 2400;
+    document.getElementById('goalValue').innerText = userGoal;
+
+    function editGoal() {
+        let newGoal = prompt(translations[currentLang].promptGoal, userGoal);
+        if (newGoal && !isNaN(newGoal)) {
+            userGoal = newGoal; localStorage.setItem('calorieGoal', userGoal);
+            document.getElementById('goalValue').innerText = userGoal;
+            loadLogsForDate(document.getElementById('calendar').value);
+        }
+    }
+
+    // --- РОБОТА З БАЗОЮ (ВКЛЮЧНО З МОДАЛЬНИМ ВІКНОМ) ---
+    let dbIngredients = [];
+
+    function loadIngredients() {
+        fetch('/api/ingredients')
+            .then(res => res.json())
+            .then(data => {
+                dbIngredients = data;
+                const select = document.getElementById('ingredientSelect');
+                select.innerHTML = `<option value="" disabled selected data-i18n="selectFood">${translations[currentLang].selectFood}</option>`;
+                data.forEach(item => {
+                    select.innerHTML += `<option value="${item.ingredientId}">${item.name} (${item.calories} ккал/100г)</option>`;
+                });
+            });
+    }
+
+    function openModal() { document.getElementById('addIngModal').classList.add('active'); }
+    function closeModal() { document.getElementById('addIngModal').classList.remove('active'); }
+
+    function saveNewIngredient() {
+        const newIng = {
+            name: document.getElementById('newName').value,
+            calories: document.getElementById('newCal').value,
+            protein: document.getElementById('newProt').value,
+            fat: document.getElementById('newFat').value,
+            carbs: document.getElementById('newCarb').value
+        };
+
+        if(!newIng.name || !newIng.calories) return;
+
+        fetch('/api/ingredients', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newIng)
+        })
+            .then(response => response.json())
+            .then(savedItem => {
+                dbIngredients.push(savedItem);
+                const select = document.getElementById('ingredientSelect');
+                select.innerHTML += `<option value="${savedItem.ingredientId}">${savedItem.name} (${savedItem.calories} ккал/100г)</option>`;
+                select.value = savedItem.ingredientId;
+
+                document.getElementById('newName').value = ''; document.getElementById('newCal').value = '';
+                document.getElementById('newProt').value = ''; document.getElementById('newFat').value = '';
+                document.getElementById('newCarb').value = '';
+                closeModal();
+            });
+    }
+
+    // --- ЛОГІКА ЩОДЕННИКА ---
+    function loadLogsForDate(dateString) {
+        fetch(`/api/logs?date=${dateString}`).then(res => res.json()).then(data => { updateDiaryUI(data); });
+    }
+
+    function addToDiary() {
+        const mealType = document.getElementById('mealTypeSelect').value;
+        const ingId = document.getElementById('ingredientSelect').value;
+        const grams = parseFloat(document.getElementById('gramsInput').value);
+        const selectedDate = document.getElementById('calendar').value;
+
+        if(!ingId || !grams) return;
+
+        const food = dbIngredients.find(item => item.ingredientId == ingId);
+        const multiplier = grams / 100;
+
+        const logEntry = {
+            logDate: selectedDate, mealType: mealType, foodName: food.name, weight: grams,
+            calories: (food.calories * multiplier), protein: (food.protein * multiplier),
+            fat: (food.fat * multiplier), carbs: (food.carbs * multiplier)
+        };
+
+        fetch('/api/logs', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logEntry)
+        }).then(() => {
+            loadLogsForDate(selectedDate);
+            document.getElementById('gramsInput').value = '';
+        });
+    }
+
+    function updateDiaryUI(logs) {
+        const tbody = document.getElementById('diaryBody');
+        tbody.innerHTML = '';
+        let sumCal = 0, sumProt = 0, sumFat = 0, sumCarbs = 0;
+
+        logs.forEach(log => {
+            sumCal += log.calories; sumProt += log.protein; sumFat += log.fat; sumCarbs += log.carbs;
+            tbody.innerHTML += `<tr><td><strong>${log.mealType}</strong></td><td>${log.foodName}</td><td>${log.weight}</td>
+                <td>${log.calories.toFixed(1)}</td><td>${log.protein.toFixed(1)}</td><td>${log.fat.toFixed(1)}</td><td>${log.carbs.toFixed(1)}</td></tr>`;
+        });
+
+        const calElement = document.getElementById('totCal');
+        calElement.innerText = sumCal.toFixed(0);
+        document.getElementById('totProt').innerText = sumProt.toFixed(1);
+        document.getElementById('totFat').innerText = sumFat.toFixed(1);
+        document.getElementById('totCarbs').innerText = sumCarbs.toFixed(1);
+
+        let percent = (sumCal / userGoal) * 100;
+        const progressBar = document.getElementById('calProgress');
+
+        if (percent > 100) {
+            progressBar.style.width = '100%'; progressBar.style.backgroundColor = 'var(--danger)'; calElement.style.color = 'var(--danger)';
+        } else {
+            progressBar.style.width = percent + '%'; progressBar.style.backgroundColor = 'var(--table-header)'; calElement.style.color = 'var(--table-header)';
+        }
+    }
+
+    changeLanguage();
+    loadIngredients();
+    const today = new Date().toISOString().split('T')[0];
+    loadLogsForDate(today);
+</script>
+
+</body>
+</html>
