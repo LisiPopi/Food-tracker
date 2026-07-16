@@ -26,54 +26,24 @@ public class Ingredient {
     @Column(name = "carbs")
     private Double carbs;
 
-    public Ingredient() {
-    }
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
-    public Long getIngredientId() {
-        return ingredientId;
-    }
+    public Ingredient() {}
 
-    public void setIngredientId(Long ingredientId) {
-        this.ingredientId = ingredientId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Double getCalories() {
-        return calories;
-    }
-
-    public void setCalories(Double calories) {
-        this.calories = calories;
-    }
-
-    public Double getProtein() {
-        return protein;
-    }
-
-    public void setProtein(Double protein) {
-        this.protein = protein;
-    }
-
-    public Double getFat() {
-        return fat;
-    }
-
-    public void setFat(Double fat) {
-        this.fat = fat;
-    }
-
-    public Double getCarbs() {
-        return carbs;
-    }
-
-    public void setCarbs(Double carbs) {
-        this.carbs = carbs;
-    }
+    public Long getIngredientId() { return ingredientId; }
+    public void setIngredientId(Long ingredientId) { this.ingredientId = ingredientId; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Double getCalories() { return calories; }
+    public void setCalories(Double calories) { this.calories = calories; }
+    public Double getProtein() { return protein; }
+    public void setProtein(Double protein) { this.protein = protein; }
+    public Double getFat() { return fat; }
+    public void setFat(Double fat) { this.fat = fat; }
+    public Double getCarbs() { return carbs; }
+    public void setCarbs(Double carbs) { this.carbs = carbs; }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 }

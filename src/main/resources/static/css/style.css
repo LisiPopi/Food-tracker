@@ -1,0 +1,69 @@
+:root {
+    --text-color: #333333; --container-bg: rgba(255, 255, 255, 0.85);
+    --table-border: rgba(0, 0, 0, 0.1); --table-header: #4CAF50;
+    --input-bg: rgba(255, 255, 255, 0.9); --card-bg: rgba(255, 255, 255, 0.6); --danger: #ff4d4d;
+}
+
+[data-theme="dark"] {
+    --text-color: #e0e0e0; --container-bg: rgba(30, 30, 30, 0.85);
+    --table-border: rgba(255, 255, 255, 0.1); --table-header: #2e7d32;
+    --input-bg: rgba(40, 40, 40, 0.9); --card-bg: rgba(0, 0, 0, 0.4); --danger: #ff6b6b;
+}
+
+html, body { -ms-overflow-style: none; scrollbar-width: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+.bg-layer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background-size: 400% 400%; animation: gradientBG 8s ease infinite; transition: opacity 1.5s ease-in-out; }
+.bg-light { background: linear-gradient(-45deg, #ffbba6, #ffc3a0, #ffafbd, #c9ffbf, #e2ebf0); background-size: 400% 400%; opacity: 1; }
+.bg-dark { background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #141e30, #243b55); background-size: 400% 400%; opacity: 0; }
+[data-theme="dark"] .bg-light { opacity: 0; } [data-theme="dark"] .bg-dark { opacity: 1; }
+
+*, *::before, *::after { transition: background-color 1.5s ease, color 1.5s ease, border-color 1.5s ease, box-shadow 1.5s ease; box-sizing: border-box; }
+button, .icon-btn, .close-btn, .edit-goal-btn { transition: all 0.3s ease !important; }
+
+body { color: var(--text-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; margin: 0; min-height: 100vh; background-color: transparent; }
+.top-bar { max-width: 1000px; margin: 0 auto 15px auto; display: flex; justify-content: space-between; align-items: center; }
+.controls-left { display: flex; gap: 15px; }
+
+.glass-btn, .glass-input { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--table-border); background-color: var(--container-bg); color: var(--text-color); font-size: 14px; cursor: pointer; backdrop-filter: blur(5px); }
+.glass-btn:hover { background-color: var(--table-header); color: white; border-color: var(--table-header); }
+.glass-input { cursor: pointer; text-align: center; font-weight: bold; width: 130px; }
+
+.container { max-width: 1000px; margin: 0 auto; background-color: var(--container-bg); padding: 25px; border-radius: 15px; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.1); }
+h1, h2, h3 { text-align: center; margin-top: 0; }
+
+.summary-board { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 25px; }
+.summary-card { flex: 1; background-color: var(--card-bg); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid var(--table-border); }
+.summary-card h3 { margin: 0 0 10px 0; font-size: 16px; opacity: 0.8; }
+.summary-card .value { font-size: 24px; font-weight: bold; color: var(--table-header); }
+.target { font-size: 12px; opacity: 0.8; margin-top: 8px; display: flex; justify-content: center; align-items: center; gap: 5px;}
+.edit-goal-btn { background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.6; padding: 0;} .edit-goal-btn:hover { opacity: 1; transform: scale(1.1); }
+.progress-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 8px; overflow: hidden; } [data-theme="dark"] .progress-bar { background: rgba(255,255,255,0.1); }
+.progress-fill { height: 100%; background: var(--table-header); width: 0%; transition: width 0.5s ease, background-color 0.5s ease; }
+
+.add-diary-form { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 15px; border: 1px solid var(--table-border); border-radius: 8px; background-color: var(--card-bg); align-items: center; }
+.add-diary-form select, .add-diary-form input { padding: 10px; border: 1px solid var(--table-border); border-radius: 8px; background-color: var(--input-bg); color: var(--text-color); }
+.ing-group { display: flex; flex: 2; gap: 5px; } .ing-group select { flex: 1; }
+.icon-btn { padding: 0 15px; background-color: var(--card-bg); color: var(--text-color); border: 1px solid var(--table-border); border-radius: 8px; cursor: pointer; font-size: 16px; } .icon-btn:hover { background-color: var(--table-header); color: white; border-color: var(--table-header); }
+.add-btn { padding: 10px 15px; background-color: var(--table-header); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; flex: 0.5; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 20px; } th, td { border: 1px solid var(--table-border); padding: 12px; text-align: left; } th { background-color: var(--table-header); color: white; border-color: var(--table-header); }
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+.flatpickr-calendar { background: var(--container-bg) !important; backdrop-filter: blur(12px) !important; border: 1px solid var(--table-border) !important; } .flatpickr-day, .flatpickr-current-month, .flatpickr-weekday, .flatpickr-month { color: var(--text-color) !important; fill: var(--text-color) !important; } .flatpickr-day.selected { background: var(--table-header) !important; border-color: var(--table-header) !important; color: white !important;}
+
+.modal-overlay { visibility: hidden; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); z-index: 1000; display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease, visibility 0.3s ease; } .modal-overlay.active { visibility: visible; opacity: 1; }
+.modal-content { background-color: var(--container-bg); padding: 25px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255, 255, 255, 0.2); width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; transform: scale(0.8) translateY(-30px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); } .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; } .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color); } .close-btn:hover { color: var(--danger); transform: scale(1.1); }
+.modal-content input { padding: 12px; border: 1px solid var(--table-border); border-radius: 8px; background-color: var(--input-bg); color: var(--text-color); font-size: 14px; }
+.save-db-btn { padding: 12px; background-color: var(--table-header); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
+
+.main-nav {display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+.nav-link {padding: 10px 20px; border-radius: 8px; background-color: var(--card-bg); color: var(--text-color); text-decoration: none; font-weight: bold; border: 1px solid var(--table-border); backdrop-filter: blur(5px); transition: all 0.3s ease; }
+.nav-link:hover, .nav-link.active {background-color: var(--table-header); color: white; border-color: var(--table-header); }
+
+
+.modal-content select { width: 100%; padding: 12px 15px; margin-bottom: 15px; background-color: var(--card-bg, #2a2a2a); color: var(--text-color, #ffffff); border: 1px solid var(--table-border, #444); border-radius: 8px; font-family: inherit; font-size: 14px; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 24px; cursor: pointer; transition: border-color 0.3s ease; }
+.modal-content select:focus { outline: none; border-color: var(--table-header, #4CAF50); }
+.modal-content select option { background-color: #2a2a2a; color: #ffffff; padding: 10px; }

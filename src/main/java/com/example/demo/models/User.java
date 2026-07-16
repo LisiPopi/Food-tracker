@@ -1,4 +1,5 @@
 package com.example.demo.models;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -9,45 +10,23 @@ public class User {
     @Column(name = "userid")
     private Long userId;
 
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
     @Column(name = "username")
     private String username;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     @Column(name = "email")
     private String email;
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-
     @Column(name = "goal")
     private String goal;
 
-    public String getGoal() {
-        return goal;
-    }
+    public User() {}
 
-    public void setGoal(String goal) {
-        this.goal = goal;
-    }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getGoal() { return goal; }
+    public void setGoal(String goal) { this.goal = goal; }
 }

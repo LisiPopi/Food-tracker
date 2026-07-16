@@ -1,10 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>База продуктів</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-$END$
+
+<div class="bg-layer bg-light"></div>
+<div class="bg-layer bg-dark"></div>
+
+<div class="top-bar">
+    <div class="controls-left">
+        <select id="langSwitch" class="glass-btn" onchange="changeLanguage()">
+            <option value="uk">🇺🇦 Укр</option><option value="en">🇬🇧 Eng</option><option value="de">🇩🇪 Deu</option>
+        </select>
+        <button id="themeToggle" class="glass-btn"><span id="themeIcon">🌙</span> <span data-i18n="theme">Темна тема</span></button>
+    </div>
+</div>
+
+<div class="container">
+    <nav class="main-nav">
+        <a href="/" class="nav-link" data-i18n="navDiary">📅 Щоденник</a>
+        <a href="/ingredients" class="nav-link active" data-i18n="navBase">🍎 База продуктів</a>
+    </nav>
+
+    <h1 data-i18n="navBase">База інгредієнтів</h1>
+
+    <div th:if="${param.error}" style="background-color: var(--danger); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+        ❌ Неможливо видалити цей продукт, оскільки ви вже додали його до свого щоденника харчування! Спочатку видаліть записи з ним.
+    </div>
+
+    <form th:action="@{/web/add-ingredient}" method="post" class="add-diary-form">
+        <input type="text" name="name" data-i18n-ph="phName" placeholder="Назва (напр. Банан)" required>
+
+        <div style="display: flex; gap: 5px; flex: 1;">
+            <select name="categoryId" required style="flex: 1; border: 1px solid var(--table-border); border-radius: 8px; background-color: var(--input-bg); color: var(--text-color);">
+                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:data-i18n="${cat.name}"></option>
+            </select>
+            <button type="button" class="icon-btn" onclick="openCategoryModal()" title="Створити власну категорію">➕</button>
+        </div>
+
+        <input type="number" step="0.1" name="calories" data-i18n-ph="phCal" placeholder="Ккал" required style="width: 80px;">
+        <input type="number" step="0.1" name="protein" data-i18n-ph="phProt" placeholder="Білки" required style="width: 60px;">
+        <input type="number" step="0.1" name="fat" data-i18n-ph="phFat" placeholder="Жири" required style="width: 60px;">
+        <input type="number" step="0.1" name="carbs" data-i18n-ph="phCarb" placeholder="Вугл." required style="width: 60px;">
+        <button type="submit" class="add-btn" data-i18n="saveToDB">💾 Зберегти</button>
+    </form>
+
+    <table>
+        <thead>
+        <tr>
+            <th data-i18n="categoryHeader">Категорія</th>
+            <th data-i18n="name">Назва</th>
+            <th data-i18n="cal">Ккал</th>
+            <th data-i18n="prot">Білки (г)</th>
+            <th data-i18n="fat">Жири (г)</th>
+            <th data-i18n="carbs">Вуглеводи (г)</th>
+            <th data-i18n="actions" style="text-align: center;">Дії</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="ing : ${ingredients}">
+            <td><span th:text="${ing.category != null ? ing.category.name : 'Без категорії'}" th:data-i18n="${ing.category != null ? ing.category.name : 'Без категорії'}" style="opacity: 0.7; font-size: 12px;"></span></td>
+            <td><strong th:text="${ing.name}"></strong></td>
+            <td th:text="${ing.calories}"></td>
+            <td th:text="${ing.protein}"></td>
+            <td th:text="${ing.fat}"></td>
+            <td th:text="${ing.carbs}"></td>
+            <td style="text-align: center;">
+                <div style="display: inline-flex; gap: 5px;">
+                    <button type="button" class="icon-btn"
+                            th:data-id="${ing.ingredientId}" th:data-name="${ing.name}"
+                            th:data-cal="${ing.calories}" th:data-prot="${ing.protein}"
+                            th:data-fat="${ing.fat}" th:data-carbs="${ing.carbs}"
+                            th:data-cat="${ing.category != null ? ing.category.id : ''}"
+                            onclick="openEditModal(this)">✏️</button>
+
+                    <form th:action="@{/web/delete-ingredient}" method="post" style="margin: 0;">
+                        <input type="hidden" name="id" th:value="${ing.ingredientId}">
+                        <button type="submit" class="icon-btn" style="color: var(--danger);" onclick="return confirm('Ви впевнені, що хочете видалити цей продукт?')">❌</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="modal-overlay" id="addCategoryModal">
+    <form th:action="@{/web/add-category}" method="post" class="modal-content">
+        <div class="modal-header">
+            <h2>Нова категорія</h2>
+            <button type="button" class="close-btn" onclick="closeCategoryModal()">✖</button>
+        </div>
+        <input type="text" name="name" placeholder="Назва (напр. Морепродукти)" required>
+        <button type="submit" class="save-db-btn">💾 Додати категорію</button>
+    </form>
+</div>
+
+<div class="modal-overlay" id="editIngModal">
+    <form th:action="@{/web/update-ingredient}" method="post" class="modal-content">
+        <input type="hidden" name="id" id="editId">
+        <div class="modal-header">
+            <h2 data-i18n="editProd">Редагувати продукт</h2>
+            <button type="button" class="close-btn" onclick="closeEditModal()">✖</button>
+        </div>
+
+        <input type="text" name="name" id="editName" data-i18n-ph="phName" required>
+        <select name="categoryId" id="editCategory" required>
+            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:data-i18n="${cat.name}"></option>
+        </select>
+        <input type="number" step="0.1" name="calories" id="editCal" data-i18n-ph="phCal" required>
+        <input type="number" step="0.1" name="protein" id="editProt" data-i18n-ph="phProt" required>
+        <input type="number" step="0.1" name="fat" id="editFat" data-i18n-ph="phFat" required>
+        <input type="number" step="0.1" name="carbs" id="editCarb" data-i18n-ph="phCarb" required>
+
+        <button type="submit" class="save-db-btn" data-i18n="updateBtn">💾 Оновити</button>
+    </form>
+</div>
+
+<script>
+    // Скрипти для керування модальними вікнами
+    function openCategoryModal() { document.getElementById('addCategoryModal').classList.add('active'); }
+    function closeCategoryModal() { document.getElementById('addCategoryModal').classList.remove('active'); }
+
+    function openEditModal(btn) {
+        document.getElementById('editId').value = btn.getAttribute('data-id');
+        document.getElementById('editName').value = btn.getAttribute('data-name');
+        document.getElementById('editCal').value = btn.getAttribute('data-cal');
+        document.getElementById('editProt').value = btn.getAttribute('data-prot');
+        document.getElementById('editFat').value = btn.getAttribute('data-fat');
+        document.getElementById('editCarb').value = btn.getAttribute('data-carbs');
+
+        let catId = btn.getAttribute('data-cat');
+        if (catId) document.getElementById('editCategory').value = catId;
+
+        document.getElementById('editIngModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editIngModal').classList.remove('active');
+    }
+</script>
+
+<script th:src="@{/js/script.js}"></script>
 </body>
 </html>
